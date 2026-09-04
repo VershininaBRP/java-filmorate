@@ -33,3 +33,27 @@ FROM films f
 LEFT JOIN film_genres fg ON f.id = fg.film_id
 LEFT JOIN genres g ON fg.genre_id = g.id
 GROUP BY f.id;
+```
+#### 2. Получить топ популярных фильмов (по лайкам)
+```sql
+SELECT 
+    f.id,
+    f.name,
+    COUNT(l.user_id) AS likes_count
+FROM films f
+LEFT JOIN likes l ON f.id = l.film_id
+GROUP BY f.id
+ORDER BY likes_count DESC
+LIMIT 10;
+```
+#### 3.Получить всех друзей пользователя
+```sql
+SELECT 
+    u.id,
+    u.login,
+    u.name
+FROM users u
+JOIN friendships f ON u.id = f.friend_id
+WHERE f.user_id = 1 AND f.status = 'CONFIRMED';
+```
+и т.д.

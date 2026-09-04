@@ -5,12 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -25,8 +26,21 @@ public class UserService {
     public User addFriend(int userId, int friendId) {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        user.getFriends().put(friendId, FriendshipStatus.PENDING);
+        friend.getFriends().put(userId, FriendshipStatus.PENDING);
+        userStorage.update(user);
+        userStorage.update(friend);
+        return user;
+    }
+
+    public User confirmFriend(int userId, int friendId) {
+        User user = getUserOrThrow(userId);
+        User friend = getUserOrThrow(friendId);
+        if (!user.getFriends().containsKey(friendId) || !friend.getFriends().containsKey(userId)) {
+            throw new NotFoundException("Запрос на добавление в друзья не найден");
+        }
+        user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
+        friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
         userStorage.update(user);
         userStorage.update(friend);
         return user;
@@ -45,7 +59,7 @@ public class UserService {
     public List<User> getFriends(int userId) {
         User user = getUserOrThrow(userId);
         List<User> friends = new ArrayList<>();
-        for (Integer friendId : user.getFriends()) {
+        for (Integer friendId : user.getFriends().keySet()) {
             userStorage.findById(friendId).ifPresent(friends::add);
         }
         return friends;
@@ -54,11 +68,11 @@ public class UserService {
     public List<User> getCommonFriends(int userId, int otherId) {
         User user = getUserOrThrow(userId);
         User other = getUserOrThrow(otherId);
-        Set<Integer> userFriends = user.getFriends();
-        Set<Integer> otherFriends = other.getFriends();
+        Map<Integer, FriendshipStatus> userFriends = user.getFriends();
+        Map<Integer, FriendshipStatus> otherFriends = other.getFriends();
         List<User> commonFriends = new ArrayList<>();
-        for (Integer friendId : userFriends) {
-            if (otherFriends.contains(friendId)) {
+        for (Integer friendId : userFriends.keySet()) {
+            if (otherFriends.containsKey(friendId)) {
                 userStorage.findById(friendId).ifPresent(commonFriends::add);
             }
         }

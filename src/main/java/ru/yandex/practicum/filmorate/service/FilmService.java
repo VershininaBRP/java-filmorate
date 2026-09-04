@@ -97,5 +97,10 @@ public class FilmService {
             log.error("Ошибка валидации фильма: продолжительность {} должна быть положительной", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительной");
         }
+
+        if (film.getMpaRating() == null) {
+            log.error("Ошибка валидации фильма: рейтинг MPA не может быть пустым");
+            throw new ValidationException("Рейтинг MPA не может быть пустым");
+        }
     }
 }

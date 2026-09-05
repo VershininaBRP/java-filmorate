@@ -16,6 +16,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -76,7 +77,17 @@ public class FilmService {
         validateGenres(film);
         validateMpa(film);
         if (film.getGenres() != null) {
-            film.getGenres().sort((g1, g2) -> Integer.compare(g1.getId(), g2.getId()));
+            List<Genre> uniqueGenres = film.getGenres().stream()
+                    .collect(Collectors.toMap(
+                            Genre::getId,
+                            genre -> genre,
+                            (existing, replacement) -> existing
+                    ))
+                    .values()
+                    .stream()
+                    .sorted((g1, g2) -> Integer.compare(g1.getId(), g2.getId()))
+                    .collect(Collectors.toList());
+            film.setGenres(uniqueGenres);
         }
         return filmStorage.create(film);
     }
@@ -89,7 +100,17 @@ public class FilmService {
         validateGenres(film);
         validateMpa(film);
         if (film.getGenres() != null) {
-            film.getGenres().sort((g1, g2) -> Integer.compare(g1.getId(), g2.getId()));
+            List<Genre> uniqueGenres = film.getGenres().stream()
+                    .collect(Collectors.toMap(
+                            Genre::getId,
+                            genre -> genre,
+                            (existing, replacement) -> existing
+                    ))
+                    .values()
+                    .stream()
+                    .sorted((g1, g2) -> Integer.compare(g1.getId(), g2.getId()))
+                    .collect(Collectors.toList());
+            film.setGenres(uniqueGenres);
         }
         return filmStorage.update(film);
     }

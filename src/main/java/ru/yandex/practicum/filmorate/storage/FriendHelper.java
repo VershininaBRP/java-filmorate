@@ -30,13 +30,13 @@ public class FriendHelper {
                 fromUserId, toUserId);
         jdbcTemplate.update("INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, 'ACCEPTED')",
                 fromUserId, toUserId);
+        jdbcTemplate.update("INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, 'ACCEPTED')",
+                toUserId, fromUserId);
     }
 
     public void removeFriend(int userId, int friendId) {
-        jdbcTemplate.update("DELETE FROM friendships WHERE user_id = ? AND friend_id = ?",
-                userId, friendId);
-        jdbcTemplate.update("DELETE FROM friendships WHERE user_id = ? AND friend_id = ?",
-                friendId, userId);
+        jdbcTemplate.update("DELETE FROM friendships WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)",
+                userId, friendId, friendId, userId);
         jdbcTemplate.update("DELETE FROM friend_requests WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?)",
                 userId, friendId, friendId, userId);
     }
@@ -62,8 +62,8 @@ public class FriendHelper {
 
     public boolean areFriends(int userId, int friendId) {
         Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ? AND status = 'ACCEPTED'",
-                Integer.class, userId, friendId);
+                "SELECT COUNT(*) FROM friendships WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)",
+                Integer.class, userId, friendId, friendId, userId);
         return count != null && count > 0;
     }
 }

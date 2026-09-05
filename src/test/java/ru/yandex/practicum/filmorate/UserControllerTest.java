@@ -115,7 +115,7 @@ public class UserControllerTest {
         List<User> friends2 = userController.getFriends(user2.getId());
 
         assertTrue(friends1.stream().anyMatch(u -> u.getId() == user2.getId()));
-        assertFalse(friends2.stream().anyMatch(u -> u.getId() == user1.getId()));
+        assertTrue(friends2.stream().anyMatch(u -> u.getId() == user1.getId()));
     }
 
     @Test

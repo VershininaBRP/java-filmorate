@@ -73,10 +73,11 @@ public class UserDbStorageTest {
         assertThat(friends1.get(0)).isEqualTo(createdUser2.getId());
 
         List<Integer> friends2 = friendHelper.getFriendIds(createdUser2.getId());
-        assertThat(friends2).isEmpty();
+        assertThat(friends2).hasSize(1);
+        assertThat(friends2.get(0)).isEqualTo(createdUser1.getId());
 
         assertTrue(friendHelper.areFriends(createdUser1.getId(), createdUser2.getId()));
-        assertFalse(friendHelper.areFriends(createdUser2.getId(), createdUser1.getId()));
+        assertTrue(friendHelper.areFriends(createdUser2.getId(), createdUser1.getId()));
     }
 
     @Test
@@ -90,13 +91,18 @@ public class UserDbStorageTest {
         friendHelper.acceptFriendRequest(createdUser1.getId(), createdUser2.getId());
 
         assertTrue(friendHelper.areFriends(createdUser1.getId(), createdUser2.getId()));
+        assertTrue(friendHelper.areFriends(createdUser2.getId(), createdUser1.getId()));
 
         friendHelper.removeFriend(createdUser1.getId(), createdUser2.getId());
 
-        List<Integer> friendsAfterRemove = friendHelper.getFriendIds(createdUser1.getId());
-        assertThat(friendsAfterRemove).isEmpty();
+        List<Integer> friendsAfterRemove1 = friendHelper.getFriendIds(createdUser1.getId());
+        assertThat(friendsAfterRemove1).isEmpty();
+
+        List<Integer> friendsAfterRemove2 = friendHelper.getFriendIds(createdUser2.getId());
+        assertThat(friendsAfterRemove2).isEmpty();
 
         assertFalse(friendHelper.areFriends(createdUser1.getId(), createdUser2.getId()));
+        assertFalse(friendHelper.areFriends(createdUser2.getId(), createdUser1.getId()));
     }
 
     @Test

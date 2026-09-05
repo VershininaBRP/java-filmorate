@@ -16,7 +16,9 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,9 +50,10 @@ public class FilmControllerTest {
         film.setDuration(120);
         MpaRating mpa = mpaDbStorage.findById(3).orElseThrow();
         film.setMpaRating(mpa);
-        Set<Genre> genres = new HashSet<>();
+        List<Genre> genres = new ArrayList<>();
         genreDbStorage.findById(2).ifPresent(genres::add);
         genreDbStorage.findById(1).ifPresent(genres::add);
+        genres.sort((g1, g2) -> Integer.compare(g1.getId(), g2.getId()));
         film.setGenres(genres);
         return film;
     }

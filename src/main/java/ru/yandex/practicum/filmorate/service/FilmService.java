@@ -75,6 +75,9 @@ public class FilmService {
         validateFilm(film);
         validateGenres(film);
         validateMpa(film);
+        if (film.getGenres() != null) {
+            film.getGenres().sort((g1, g2) -> Integer.compare(g1.getId(), g2.getId()));
+        }
         return filmStorage.create(film);
     }
 
@@ -85,6 +88,9 @@ public class FilmService {
         validateFilm(film);
         validateGenres(film);
         validateMpa(film);
+        if (film.getGenres() != null) {
+            film.getGenres().sort((g1, g2) -> Integer.compare(g1.getId(), g2.getId()));
+        }
         return filmStorage.update(film);
     }
 

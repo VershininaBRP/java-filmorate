@@ -12,9 +12,9 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.*;
 
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,7 +68,7 @@ public class FilmDbStorageTest {
 
         Film film = createTestFilm();
         film.setMpaRating(mpa);
-        Set<Genre> genres = new HashSet<>();
+        List<Genre> genres = new ArrayList<>();
         genres.add(genre);
         film.setGenres(genres);
 

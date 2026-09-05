@@ -52,7 +52,7 @@ public class LikeHelper {
             genre.setName(rs.getString("name"));
             return genre;
         }, film.getId());
-        film.setGenres(new java.util.LinkedHashSet<>(genres));
+        film.setGenres(genres);
     }
 
     private static class FilmRowMapper implements org.springframework.jdbc.core.RowMapper<Film> {

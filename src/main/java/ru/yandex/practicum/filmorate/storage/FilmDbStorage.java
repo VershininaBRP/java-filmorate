@@ -93,7 +93,7 @@ public class FilmDbStorage extends BaseRepository implements FilmStorage {
             genre.setName(rs.getString("name"));
             return genre;
         }, film.getId());
-        film.setGenres(new java.util.LinkedHashSet<>(genres));
+        film.setGenres(genres);
         return film;
     }
 }

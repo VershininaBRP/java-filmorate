@@ -1,6 +1,6 @@
 # Filmorate
 
-## Схема базы данных
+## Схема базы данных (промежуточное задание) 
 
 <img width="1168" height="698" alt="2026-09-05_00-49-07" src="https://github.com/user-attachments/assets/34cea3b2-c781-44d6-867e-b3d11774f221" />
 

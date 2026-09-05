@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
+
 import java.util.List;
 
 @RestController
@@ -45,7 +46,14 @@ public class UserController {
     @PutMapping("/{id}/friends/{friendId}")
     public User addFriend(@PathVariable int id, @PathVariable int friendId) {
         User user = userService.addFriend(id, friendId);
-        log.info("Пользователь {} добавил в друзья {}", id, friendId);
+        log.info("Пользователь {} отправил заявку в друзья пользователю {}", id, friendId);
+        return user;
+    }
+
+    @PutMapping("/{id}/friends/{friendId}/accept")
+    public User acceptFriend(@PathVariable int id, @PathVariable int friendId) {
+        User user = userService.acceptFriend(id, friendId);
+        log.info("Пользователь {} принял заявку от {}", id, friendId);
         return user;
     }
 
@@ -59,6 +67,11 @@ public class UserController {
     @GetMapping("/{id}/friends")
     public List<User> getFriends(@PathVariable int id) {
         return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/pending")
+    public List<User> getPendingRequests(@PathVariable int id) {
+        return userService.getPendingRequests(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")

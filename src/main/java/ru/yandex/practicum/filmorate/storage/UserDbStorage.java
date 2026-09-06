@@ -88,14 +88,14 @@ public class UserDbStorage implements UserStorage {
     }
 
     private void loadFriends(User user) {
-        String sql = "SELECT friend_id FROM friends WHERE user_id = ?";
+        String sql = "SELECT friend_id FROM friends WHERE user_id = ? AND status = 'CONFIRMED'";
         List<Integer> friendIds = jdbcTemplate.queryForList(sql, Integer.class, user.getId());
         user.setFriends(new HashSet<>(friendIds));
     }
 
     @Override
     public void addFriend(int userId, int friendId) {
-        jdbcTemplate.update("INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, 'PENDING')", userId, friendId);
+        jdbcTemplate.update("INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, 'CONFIRMED')", userId, friendId);
     }
 
     @Override
@@ -105,7 +105,8 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void removeFriend(int userId, int friendId) {
-        jdbcTemplate.update("DELETE FROM friends WHERE user_id = ? AND friend_id = ?", userId, friendId);
+        String sql = "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
+        jdbcTemplate.update(sql, userId, friendId, friendId, userId);
     }
 
     @Override

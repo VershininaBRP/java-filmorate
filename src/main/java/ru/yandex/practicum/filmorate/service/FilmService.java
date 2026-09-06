@@ -38,6 +38,9 @@ public class FilmService {
         if (!userStorage.existsById(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
+        if (!filmStorage.existsById(filmId)) {
+            throw new NotFoundException("Фильм с id " + filmId + " не найден");
+        }
         filmStorage.addLike(filmId, userId);
         return getFilmOrThrow(filmId);
     }
@@ -45,6 +48,9 @@ public class FilmService {
     public Film removeLike(int filmId, int userId) {
         if (!userStorage.existsById(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
+        }
+        if (!filmStorage.existsById(filmId)) {
+            throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
         filmStorage.removeLike(filmId, userId);
         return getFilmOrThrow(filmId);

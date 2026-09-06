@@ -5,13 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -24,59 +21,35 @@ public class UserService {
     }
 
     public User addFriend(int userId, int friendId) {
-        User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);
-        user.getFriends().put(friendId, FriendshipStatus.PENDING);
-        friend.getFriends().put(userId, FriendshipStatus.PENDING);
-        userStorage.update(user);
-        userStorage.update(friend);
-        return user;
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
+        userStorage.addFriend(userId, friendId);
+        return getUserOrThrow(userId);
     }
 
     public User confirmFriend(int userId, int friendId) {
-        User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);
-        if (!user.getFriends().containsKey(friendId) || !friend.getFriends().containsKey(userId)) {
-            throw new NotFoundException("Запрос на добавление в друзья не найден");
-        }
-        user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
-        friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
-        userStorage.update(user);
-        userStorage.update(friend);
-        return user;
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
+        userStorage.confirmFriend(userId, friendId);
+        return getUserOrThrow(userId);
     }
 
     public User removeFriend(int userId, int friendId) {
-        User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
-        userStorage.update(user);
-        userStorage.update(friend);
-        return user;
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
+        userStorage.removeFriend(userId, friendId);
+        return getUserOrThrow(userId);
     }
 
     public List<User> getFriends(int userId) {
-        User user = getUserOrThrow(userId);
-        List<User> friends = new ArrayList<>();
-        for (Integer friendId : user.getFriends().keySet()) {
-            userStorage.findById(friendId).ifPresent(friends::add);
-        }
-        return friends;
+        getUserOrThrow(userId);
+        return userStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(int userId, int otherId) {
-        User user = getUserOrThrow(userId);
-        User other = getUserOrThrow(otherId);
-        Map<Integer, FriendshipStatus> userFriends = user.getFriends();
-        Map<Integer, FriendshipStatus> otherFriends = other.getFriends();
-        List<User> commonFriends = new ArrayList<>();
-        for (Integer friendId : userFriends.keySet()) {
-            if (otherFriends.containsKey(friendId)) {
-                userStorage.findById(friendId).ifPresent(commonFriends::add);
-            }
-        }
-        return commonFriends;
+        getUserOrThrow(userId);
+        getUserOrThrow(otherId);
+        return userStorage.getCommonFriends(userId, otherId);
     }
 
     public User getUserById(int id) {
@@ -113,27 +86,18 @@ public class UserService {
 
     private void validateUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
-            log.error("Ошибка валидации пользователя: email не может быть пустым");
             throw new ValidationException("Email не может быть пустым");
         }
-
         if (!user.getEmail().contains("@")) {
-            log.error("Ошибка валидации пользователя: email {} не содержит @", user.getEmail());
             throw new ValidationException("Email должен содержать @");
         }
-
         if (user.getLogin() == null || user.getLogin().isBlank()) {
-            log.error("Ошибка валидации пользователя: логин не может быть пустым");
             throw new ValidationException("Логин не может быть пустым");
         }
-
         if (user.getLogin().contains(" ")) {
-            log.error("Ошибка валидации пользователя: логин {} содержит пробел", user.getLogin());
             throw new ValidationException("Логин не должен содержать пробелы");
         }
-
         if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Ошибка валидации пользователя: дата рождения {} в будущем", user.getBirthday());
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
     }

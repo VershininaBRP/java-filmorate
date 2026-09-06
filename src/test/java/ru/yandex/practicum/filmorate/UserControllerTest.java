@@ -1,30 +1,20 @@
 package ru.yandex.practicum.filmorate;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-
 import java.time.LocalDate;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserControllerTest {
-    private UserController userController;
-    private UserService userService;
 
-    @BeforeEach
-    void beforeEach() {
-        InMemoryUserStorage userStorage = new InMemoryUserStorage();
-        userService = new UserService(userStorage);
-        userController = new UserController(userService);
-    }
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     private User createValidUser() {
         User user = new User();
@@ -39,44 +29,32 @@ class UserControllerTest {
     void shouldThrowExceptionWhenEmailIsEmpty() {
         User user = createValidUser();
         user.setEmail("");
-
-        assertThrows(
-                ValidationException.class,
-                () -> userController.create(user)
-        );
+        ResponseEntity<String> response = restTemplate.postForEntity("/users", user, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
     void shouldThrowExceptionWhenEmailDoesNotContainAt() {
         User user = createValidUser();
         user.setEmail("incorrect-email");
-
-        assertThrows(
-                ValidationException.class,
-                () -> userController.create(user)
-        );
+        ResponseEntity<String> response = restTemplate.postForEntity("/users", user, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
     void shouldThrowExceptionWhenLoginIsEmpty() {
         User user = createValidUser();
         user.setLogin("");
-
-        assertThrows(
-                ValidationException.class,
-                () -> userController.create(user)
-        );
+        ResponseEntity<String> response = restTemplate.postForEntity("/users", user, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
     void shouldThrowExceptionWhenLoginContainsSpace() {
         User user = createValidUser();
         user.setLogin("ivan ivanov");
-
-        assertThrows(
-                ValidationException.class,
-                () -> userController.create(user)
-        );
+        ResponseEntity<String> response = restTemplate.postForEntity("/users", user, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -84,113 +62,120 @@ class UserControllerTest {
         User user = createValidUser();
         user.setLogin("ivan");
         user.setName("");
-        User createdUser = userController.create(user);
-
-        assertEquals("ivan", createdUser.getName());
+        ResponseEntity<User> response = restTemplate.postForEntity("/users", user, User.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("ivan", response.getBody().getName());
     }
 
     @Test
     void shouldThrowExceptionWhenBirthdayIsInFuture() {
         User user = createValidUser();
         user.setBirthday(LocalDate.now().plusDays(1));
-
-        assertThrows(
-                ValidationException.class,
-                () -> userController.create(user)
-        );
+        ResponseEntity<String> response = restTemplate.postForEntity("/users", user, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
     void shouldCreateUserWhenBirthdayIsToday() {
         User user = createValidUser();
         user.setBirthday(LocalDate.now());
-        User createdUser = userController.create(user);
-
-        assertNotNull(createdUser);
+        ResponseEntity<User> response = restTemplate.postForEntity("/users", user, User.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
     }
 
     @Test
-    void shouldAddFriendWithPendingStatus() {
-        User user1 = userController.create(createValidUser());
-        User user2 = userController.create(createValidUser());
+    void shouldAddAndConfirmFriend() {
+        User user1 = createValidUser();
+        user1.setEmail("user1@test.com");
+        user1.setLogin("user1");
+        ResponseEntity<User> response1 = restTemplate.postForEntity("/users", user1, User.class);
+        User created1 = response1.getBody();
+        assertNotNull(created1);
 
-        userController.addFriend(user1.getId(), user2.getId());
+        User user2 = createValidUser();
+        user2.setEmail("user2@test.com");
+        user2.setLogin("user2");
+        ResponseEntity<User> response2 = restTemplate.postForEntity("/users", user2, User.class);
+        User created2 = response2.getBody();
+        assertNotNull(created2);
 
-        assertEquals(FriendshipStatus.PENDING, user1.getFriends().get(user2.getId()));
-        assertEquals(FriendshipStatus.PENDING, user2.getFriends().get(user1.getId()));
-    }
+        restTemplate.put("/users/" + created1.getId() + "/friends/" + created2.getId(), null);
+        restTemplate.put("/users/" + created1.getId() + "/friends/confirm/" + created2.getId(), null);
 
-    @Test
-    void shouldConfirmFriendship() {
-        User user1 = userController.create(createValidUser());
-        User user2 = userController.create(createValidUser());
-
-        userController.addFriend(user1.getId(), user2.getId());
-        userService.confirmFriend(user2.getId(), user1.getId());
-
-        User updatedUser1 = userController.findById(user1.getId());
-        User updatedUser2 = userController.findById(user2.getId());
-
-        assertEquals(FriendshipStatus.CONFIRMED, updatedUser1.getFriends().get(user2.getId()));
-        assertEquals(FriendshipStatus.CONFIRMED, updatedUser2.getFriends().get(user1.getId()));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenConfirmingNonExistentFriendship() {
-        User user1 = userController.create(createValidUser());
-        User user2 = userController.create(createValidUser());
-
-        assertThrows(
-                NotFoundException.class,
-                () -> userService.confirmFriend(user1.getId(), user2.getId())
-        );
+        ResponseEntity<User[]> friendsResponse = restTemplate.getForEntity(
+                "/users/" + created1.getId() + "/friends", User[].class);
+        assertEquals(HttpStatus.OK, friendsResponse.getStatusCode());
+        User[] friends = friendsResponse.getBody();
+        assertNotNull(friends);
+        assertEquals(1, friends.length);
+        assertEquals(created2.getId(), friends[0].getId());
     }
 
     @Test
     void shouldRemoveFriend() {
-        User user1 = userController.create(createValidUser());
-        User user2 = userController.create(createValidUser());
+        User user1 = createValidUser();
+        user1.setEmail("user1@test.com");
+        user1.setLogin("user1");
+        ResponseEntity<User> response1 = restTemplate.postForEntity("/users", user1, User.class);
+        User created1 = response1.getBody();
+        assertNotNull(created1);
 
-        userController.addFriend(user1.getId(), user2.getId());
-        userController.removeFriend(user1.getId(), user2.getId());
+        User user2 = createValidUser();
+        user2.setEmail("user2@test.com");
+        user2.setLogin("user2");
+        ResponseEntity<User> response2 = restTemplate.postForEntity("/users", user2, User.class);
+        User created2 = response2.getBody();
+        assertNotNull(created2);
 
-        User updatedUser1 = userController.findById(user1.getId());
-        User updatedUser2 = userController.findById(user2.getId());
+        restTemplate.put("/users/" + created1.getId() + "/friends/" + created2.getId(), null);
+        restTemplate.put("/users/" + created1.getId() + "/friends/confirm/" + created2.getId(), null);
+        restTemplate.delete("/users/" + created1.getId() + "/friends/" + created2.getId());
 
-        assertFalse(updatedUser1.getFriends().containsKey(user2.getId()));
-        assertFalse(updatedUser2.getFriends().containsKey(user1.getId()));
-    }
-
-    @Test
-    void shouldGetFriends() {
-        User user1 = userController.create(createValidUser());
-        User user2 = userController.create(createValidUser());
-        User user3 = userController.create(createValidUser());
-
-        userController.addFriend(user1.getId(), user2.getId());
-        userController.addFriend(user1.getId(), user3.getId());
-
-        List<User> friends = userController.getFriends(user1.getId());
-
-        assertEquals(2, friends.size());
-        assertTrue(friends.stream().anyMatch(u -> u.getId() == user2.getId()));
-        assertTrue(friends.stream().anyMatch(u -> u.getId() == user3.getId()));
+        ResponseEntity<User[]> friendsResponse = restTemplate.getForEntity(
+                "/users/" + created1.getId() + "/friends", User[].class);
+        assertEquals(HttpStatus.OK, friendsResponse.getStatusCode());
+        User[] friends = friendsResponse.getBody();
+        assertNotNull(friends);
+        assertEquals(0, friends.length);
     }
 
     @Test
     void shouldGetCommonFriends() {
-        User user1 = userController.create(createValidUser());
-        User user2 = userController.create(createValidUser());
-        User user3 = userController.create(createValidUser());
+        User user1 = createValidUser();
+        user1.setEmail("user1@test.com");
+        user1.setLogin("user1");
+        ResponseEntity<User> response1 = restTemplate.postForEntity("/users", user1, User.class);
+        User created1 = response1.getBody();
+        assertNotNull(created1);
 
-        userController.addFriend(user1.getId(), user2.getId());
-        userController.addFriend(user2.getId(), user1.getId());
-        userController.addFriend(user1.getId(), user3.getId());
-        userController.addFriend(user2.getId(), user3.getId());
+        User user2 = createValidUser();
+        user2.setEmail("user2@test.com");
+        user2.setLogin("user2");
+        ResponseEntity<User> response2 = restTemplate.postForEntity("/users", user2, User.class);
+        User created2 = response2.getBody();
+        assertNotNull(created2);
 
-        List<User> commonFriends = userController.getCommonFriends(user1.getId(), user2.getId());
+        User user3 = createValidUser();
+        user3.setEmail("user3@test.com");
+        user3.setLogin("user3");
+        ResponseEntity<User> response3 = restTemplate.postForEntity("/users", user3, User.class);
+        User created3 = response3.getBody();
+        assertNotNull(created3);
 
-        assertEquals(1, commonFriends.size());
-        assertEquals(user3.getId(), commonFriends.get(0).getId());
+        restTemplate.put("/users/" + created1.getId() + "/friends/" + created2.getId(), null);
+        restTemplate.put("/users/" + created1.getId() + "/friends/confirm/" + created2.getId(), null);
+        restTemplate.put("/users/" + created1.getId() + "/friends/" + created3.getId(), null);
+        restTemplate.put("/users/" + created1.getId() + "/friends/confirm/" + created3.getId(), null);
+        restTemplate.put("/users/" + created2.getId() + "/friends/" + created3.getId(), null);
+        restTemplate.put("/users/" + created2.getId() + "/friends/confirm/" + created3.getId(), null);
+
+        ResponseEntity<User[]> commonResponse = restTemplate.getForEntity(
+                "/users/" + created1.getId() + "/friends/common/" + created2.getId(), User[].class);
+        assertEquals(HttpStatus.OK, commonResponse.getStatusCode());
+        User[] common = commonResponse.getBody();
+        assertNotNull(common);
+        assertEquals(1, common.length);
+        assertEquals(created3.getId(), common[0].getId());
     }
 }

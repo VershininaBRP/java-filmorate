@@ -16,4 +16,8 @@ public interface FilmStorage {
     List<Film> findAll();
 
     boolean existsById(int id);
+
+    void addLike(int filmId, int userId);
+
+    void removeLike(int filmId, int userId);
 }

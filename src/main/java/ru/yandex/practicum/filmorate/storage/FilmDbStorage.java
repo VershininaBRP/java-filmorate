@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.MpaRating;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -104,7 +105,7 @@ public class FilmDbStorage implements FilmStorage {
         if (genres.isEmpty()) {
             film.setGenres(null);
         } else {
-            film.setGenres(new HashSet<>(genres));
+            film.setGenres(new LinkedHashSet<>(genres));
         }
     }
 

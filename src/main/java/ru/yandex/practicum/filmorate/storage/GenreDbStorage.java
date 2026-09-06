@@ -12,7 +12,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class GenreDbStorage implements GenreStorage {
-    private final JdbcTemplate jdbcTemplate; // Теперь инициализируется через конструктор
+    private final JdbcTemplate jdbcTemplate;
 
     private final RowMapper<Genre> genreMapper = (rs, rowNum) ->
             new Genre(rs.getInt("id"), rs.getString("name"));

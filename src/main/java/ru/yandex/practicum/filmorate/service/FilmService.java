@@ -100,12 +100,12 @@ public class FilmService {
             throw new ValidationException("Рейтинг MPA не может быть пустым");
         }
         if (!mpaRatingStorage.findById(film.getMpaRating().getId()).isPresent()) {
-            throw new ValidationException("Рейтинг MPA с id " + film.getMpaRating().getId() + " не найден");
+            throw new NotFoundException("Рейтинг MPA с id " + film.getMpaRating().getId() + " не найден");
         }
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
                 if (!genreStorage.findById(genre.getId()).isPresent()) {
-                    throw new ValidationException("Жанр с id " + genre.getId() + " не найден");
+                    throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
                 }
             }
         }

@@ -12,7 +12,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class MpaRatingDbStorage implements MpaRatingStorage {
-    private final JdbcTemplate jdbcTemplate; // Теперь инициализируется через конструктор
+    private final JdbcTemplate jdbcTemplate;
 
     private final RowMapper<MpaRating> mpaMapper = (rs, rowNum) ->
             new MpaRating(rs.getInt("id"), rs.getString("name"));

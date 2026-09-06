@@ -46,7 +46,7 @@ public class FilmDbStorage implements FilmStorage {
         }, keyHolder);
         film.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
         updateGenres(film);
-        return film;
+        return findById(film.getId()).orElse(film);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sql, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), mpaId, film.getId());
         jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
         updateGenres(film);
-        return film;
+        return findById(film.getId()).orElse(film);
     }
 
     private void updateGenres(Film film) {
@@ -86,12 +86,14 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void loadMpa(Film film) {
-        String sql = "SELECT id, name FROM mpa_ratings WHERE id = ?";
-        List<MpaRating> mpaList = jdbcTemplate.query(sql, (rs, rowNum) ->
-                        new MpaRating(rs.getInt("id"), rs.getString("name")),
-                jdbcTemplate.queryForObject("SELECT mpa_rating_id FROM films WHERE id = ?", Integer.class, film.getId()));
-        if (!mpaList.isEmpty()) {
-            film.setMpaRating(mpaList.get(0));
+        Integer mpaId = jdbcTemplate.queryForObject("SELECT mpa_rating_id FROM films WHERE id = ?", Integer.class, film.getId());
+        if (mpaId != null) {
+            String sql = "SELECT id, name FROM mpa_ratings WHERE id = ?";
+            List<MpaRating> mpaList = jdbcTemplate.query(sql, (rs, rowNum) ->
+                    new MpaRating(rs.getInt("id"), rs.getString("name")), mpaId);
+            if (!mpaList.isEmpty()) {
+                film.setMpaRating(mpaList.get(0));
+            }
         }
     }
 

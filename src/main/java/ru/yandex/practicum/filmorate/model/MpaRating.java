@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MpaRating {
     private int id;
-    
     private String name;
 }

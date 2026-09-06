@@ -88,7 +88,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     private void loadFriends(User user) {
-        String sql = "SELECT friend_id FROM friends WHERE user_id = ? AND status = 'CONFIRMED'";
+        String sql = "SELECT friend_id FROM friends WHERE user_id = ?";
         List<Integer> friendIds = jdbcTemplate.queryForList(sql, Integer.class, user.getId());
         user.setFriends(new HashSet<>(friendIds));
     }

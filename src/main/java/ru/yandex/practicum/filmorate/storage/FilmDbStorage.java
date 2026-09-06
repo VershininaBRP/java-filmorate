@@ -101,7 +101,11 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT g.id, g.name FROM film_genres fg JOIN genres g ON fg.genre_id = g.id WHERE fg.film_id = ? ORDER BY g.id";
         List<Genre> genres = jdbcTemplate.query(sql, (rs, rowNum) ->
                 new Genre(rs.getInt("id"), rs.getString("name")), film.getId());
-        film.setGenres(new HashSet<>(genres));
+        if (genres.isEmpty()) {
+            film.setGenres(null);
+        } else {
+            film.setGenres(new HashSet<>(genres));
+        }
     }
 
     private void loadLikes(Film film) {

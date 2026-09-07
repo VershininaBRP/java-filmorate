@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -51,7 +52,8 @@ public class UserDbStorage implements UserStorage {
     public User update(User user) {
         String sql = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
         jdbcTemplate.update(sql, user.getEmail(), user.getLogin(), user.getName(), user.getBirthday(), user.getId());
-        return findById(user.getId()).orElseThrow(() -> new RuntimeException("User not found after update"));
+        return findById(user.getId())
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + user.getId() + " не найден"));
     }
 
     @Override
@@ -96,11 +98,6 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void addFriend(int userId, int friendId) {
         jdbcTemplate.update("INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, 'CONFIRMED')", userId, friendId);
-    }
-
-    @Override
-    public void confirmFriend(int userId, int friendId) {
-        jdbcTemplate.update("UPDATE friends SET status = 'CONFIRMED' WHERE user_id = ? AND friend_id = ?", userId, friendId);
     }
 
     @Override

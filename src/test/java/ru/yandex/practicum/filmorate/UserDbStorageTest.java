@@ -83,7 +83,7 @@ class UserDbStorageTest {
     }
 
     @Test
-    void shouldAddAndConfirmFriend() {
+    void shouldAddAndGetFriend() {
         User user1 = createValidUser();
         user1.setEmail("user1@test.com");
         user1.setLogin("user1");
@@ -95,7 +95,6 @@ class UserDbStorageTest {
         User created2 = userStorage.create(user2);
 
         userStorage.addFriend(created1.getId(), created2.getId());
-        userStorage.confirmFriend(created1.getId(), created2.getId());
 
         List<User> friends = userStorage.getFriends(created1.getId());
         assertEquals(1, friends.size());
@@ -115,7 +114,6 @@ class UserDbStorageTest {
         User created2 = userStorage.create(user2);
 
         userStorage.addFriend(created1.getId(), created2.getId());
-        userStorage.confirmFriend(created1.getId(), created2.getId());
         userStorage.removeFriend(created1.getId(), created2.getId());
 
         List<User> friends = userStorage.getFriends(created1.getId());
@@ -140,11 +138,8 @@ class UserDbStorageTest {
         User created3 = userStorage.create(user3);
 
         userStorage.addFriend(created1.getId(), created2.getId());
-        userStorage.confirmFriend(created1.getId(), created2.getId());
         userStorage.addFriend(created1.getId(), created3.getId());
-        userStorage.confirmFriend(created1.getId(), created3.getId());
         userStorage.addFriend(created2.getId(), created3.getId());
-        userStorage.confirmFriend(created2.getId(), created3.getId());
 
         List<User> commonFriends = userStorage.getCommonFriends(created1.getId(), created2.getId());
         assertEquals(1, commonFriends.size());

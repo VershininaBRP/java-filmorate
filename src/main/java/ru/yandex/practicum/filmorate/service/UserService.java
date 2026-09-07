@@ -27,13 +27,6 @@ public class UserService {
         return getUserOrThrow(userId);
     }
 
-    public User confirmFriend(int userId, int friendId) {
-        getUserOrThrow(userId);
-        getUserOrThrow(friendId);
-        userStorage.confirmFriend(userId, friendId);
-        return getUserOrThrow(userId);
-    }
-
     public User removeFriend(int userId, int friendId) {
         getUserOrThrow(userId);
         getUserOrThrow(friendId);

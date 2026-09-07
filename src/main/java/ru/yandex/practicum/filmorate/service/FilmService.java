@@ -12,9 +12,7 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MpaRatingStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -57,10 +55,7 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(int count) {
-        return filmStorage.findAll().stream()
-                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+        return filmStorage.findPopular(count);
     }
 
     public Film getFilmById(int id) {

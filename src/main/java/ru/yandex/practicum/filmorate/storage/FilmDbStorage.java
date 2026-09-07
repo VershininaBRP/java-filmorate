@@ -28,6 +28,12 @@ public class FilmDbStorage implements FilmStorage {
         film.setDescription(rs.getString("description"));
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setDuration(rs.getInt("duration"));
+        Integer mpaId = rs.getObject("mpa_rating_id", Integer.class);
+        if (mpaId != null) {
+            MpaRating mpa = new MpaRating();
+            mpa.setId(mpaId);
+            film.setMpaRating(mpa);
+        }
         return film;
     };
 
@@ -80,18 +86,17 @@ public class FilmDbStorage implements FilmStorage {
             return Optional.empty();
         }
         Film film = films.get(0);
-        loadMpa(film);
+        loadMpaDetails(film);
         loadGenres(film);
         loadLikes(film);
         return Optional.of(film);
     }
 
-    private void loadMpa(Film film) {
-        Integer mpaId = jdbcTemplate.queryForObject("SELECT mpa_rating_id FROM films WHERE id = ?", Integer.class, film.getId());
-        if (mpaId != null) {
+    private void loadMpaDetails(Film film) {
+        if (film.getMpaRating() != null) {
             String sql = "SELECT id, name FROM mpa_ratings WHERE id = ?";
             List<MpaRating> mpaList = jdbcTemplate.query(sql, (rs, rowNum) ->
-                    new MpaRating(rs.getInt("id"), rs.getString("name")), mpaId);
+                    new MpaRating(rs.getInt("id"), rs.getString("name")), film.getMpaRating().getId());
             if (!mpaList.isEmpty()) {
                 film.setMpaRating(mpaList.get(0));
             }
@@ -120,7 +125,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT * FROM films";
         List<Film> films = jdbcTemplate.query(sql, filmMapper);
         for (Film film : films) {
-            loadMpa(film);
+            loadMpaDetails(film);
             loadGenres(film);
             loadLikes(film);
         }
@@ -141,5 +146,22 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void removeLike(int filmId, int userId) {
         jdbcTemplate.update("DELETE FROM likes WHERE film_id = ? AND user_id = ?", filmId, userId);
+    }
+
+    @Override
+    public List<Film> findPopular(int count) {
+        String sql = "SELECT f.*, COUNT(l.user_id) as likes_count " +
+                "FROM films f " +
+                "LEFT JOIN likes l ON f.id = l.film_id " +
+                "GROUP BY f.id " +
+                "ORDER BY likes_count DESC " +
+                "LIMIT ?";
+        List<Film> films = jdbcTemplate.query(sql, filmMapper, count);
+        for (Film film : films) {
+            loadMpaDetails(film);
+            loadGenres(film);
+            loadLikes(film);
+        }
+        return films;
     }
 }

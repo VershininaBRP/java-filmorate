@@ -85,7 +85,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldAddAndConfirmFriend() {
+    void shouldAddAndGetFriend() {
         User user1 = createValidUser();
         user1.setEmail("user1@test.com");
         user1.setLogin("user1");
@@ -101,7 +101,6 @@ class UserControllerTest {
         assertNotNull(created2);
 
         restTemplate.put("/users/" + created1.getId() + "/friends/" + created2.getId(), null);
-        restTemplate.put("/users/" + created1.getId() + "/friends/confirm/" + created2.getId(), null);
 
         ResponseEntity<User[]> friendsResponse = restTemplate.getForEntity(
                 "/users/" + created1.getId() + "/friends", User[].class);
@@ -129,7 +128,6 @@ class UserControllerTest {
         assertNotNull(created2);
 
         restTemplate.put("/users/" + created1.getId() + "/friends/" + created2.getId(), null);
-        restTemplate.put("/users/" + created1.getId() + "/friends/confirm/" + created2.getId(), null);
         restTemplate.delete("/users/" + created1.getId() + "/friends/" + created2.getId());
 
         ResponseEntity<User[]> friendsResponse = restTemplate.getForEntity(
@@ -164,11 +162,8 @@ class UserControllerTest {
         assertNotNull(created3);
 
         restTemplate.put("/users/" + created1.getId() + "/friends/" + created2.getId(), null);
-        restTemplate.put("/users/" + created1.getId() + "/friends/confirm/" + created2.getId(), null);
         restTemplate.put("/users/" + created1.getId() + "/friends/" + created3.getId(), null);
-        restTemplate.put("/users/" + created1.getId() + "/friends/confirm/" + created3.getId(), null);
         restTemplate.put("/users/" + created2.getId() + "/friends/" + created3.getId(), null);
-        restTemplate.put("/users/" + created2.getId() + "/friends/confirm/" + created3.getId(), null);
 
         ResponseEntity<User[]> commonResponse = restTemplate.getForEntity(
                 "/users/" + created1.getId() + "/friends/common/" + created2.getId(), User[].class);

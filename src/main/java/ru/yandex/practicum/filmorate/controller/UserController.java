@@ -45,13 +45,6 @@ public class UserController {
         return user;
     }
 
-    @PutMapping("/{id}/friends/confirm/{friendId}")
-    public User confirmFriend(@PathVariable int id, @PathVariable int friendId) {
-        User user = userService.confirmFriend(id, friendId);
-        log.info("Пользователь {} подтвердил дружбу с {}", id, friendId);
-        return user;
-    }
-
     @DeleteMapping("/{id}/friends/{friendId}")
     public User removeFriend(@PathVariable int id, @PathVariable int friendId) {
         User user = userService.removeFriend(id, friendId);

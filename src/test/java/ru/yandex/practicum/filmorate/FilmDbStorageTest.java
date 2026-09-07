@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.MpaRatingDbStorage;
@@ -26,6 +27,9 @@ class FilmDbStorageTest {
 
     @Autowired
     private FilmDbStorage filmStorage;
+
+    @Autowired
+    private UserDbStorage userStorage;
 
     private Film createValidFilm() {
         Film film = new Film();
@@ -48,6 +52,15 @@ class FilmDbStorageTest {
         genres.add(genre2);
         film.setGenres(genres);
         return film;
+    }
+
+    private User createValidUser(String email, String login) {
+        User user = new User();
+        user.setEmail(email);
+        user.setLogin(login);
+        user.setName("Test User");
+        user.setBirthday(LocalDate.of(1990, 1, 1));
+        return user;
     }
 
     @Test
@@ -102,5 +115,28 @@ class FilmDbStorageTest {
         Film created = filmStorage.create(film);
         assertTrue(filmStorage.existsById(created.getId()));
         assertFalse(filmStorage.existsById(999));
+    }
+
+    @Test
+    void shouldFindPopularFilms() {
+        User user1 = userStorage.create(createValidUser("user1@test.com", "user1"));
+        User user2 = userStorage.create(createValidUser("user2@test.com", "user2"));
+
+        Film film1 = createValidFilm();
+        film1.setName("Фильм 1");
+        Film created1 = filmStorage.create(film1);
+
+        Film film2 = createValidFilm();
+        film2.setName("Фильм 2");
+        Film created2 = filmStorage.create(film2);
+
+        filmStorage.addLike(created1.getId(), user1.getId());
+        filmStorage.addLike(created1.getId(), user2.getId());
+        filmStorage.addLike(created2.getId(), user1.getId());
+
+        List<Film> popular = filmStorage.findPopular(2);
+        assertEquals(2, popular.size());
+        assertEquals(created1.getId(), popular.get(0).getId());
+        assertEquals(created2.getId(), popular.get(1).getId());
     }
 }
